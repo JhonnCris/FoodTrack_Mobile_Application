@@ -20,6 +20,7 @@ import 'views/auth_view.dart';
 import 'views/configuration_error_view.dart';
 import 'views/main_shell.dart';
 import 'views/onboarding_view.dart';
+import 'views/reset_password_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,6 +144,7 @@ class _Root extends StatelessWidget {
   Widget build(BuildContext context) {
     final session = context.watch<SessionViewModel>();
     if (session.loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (session.passwordRecoveryInProgress) return const ResetPasswordView();
     if (!session.signedIn) return const AuthView();
     final onboarded = context.select<ProfileViewModel, bool>((p) => p.onboarded);
     return onboarded ? const MainShell() : const OnboardingView();

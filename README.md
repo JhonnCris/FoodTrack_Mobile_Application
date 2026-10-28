@@ -29,11 +29,14 @@ any Supabase-dependent repositories.
 
 ## Email confirmation and password recovery
 
-The native app receives Supabase email callbacks at `foodtrack://auth`.
+Native builds receive Supabase email callbacks at `foodtrack://auth`; browser
+builds return to the same web origin that requested the email. The app shows a
+new-password screen only after Supabase reports a password-recovery callback.
 In the Supabase Dashboard, go to **Authentication > URL Configuration** and add
-`foodtrack://auth` to **Additional Redirect URLs**. This must be configured in
-the hosted project as well as in this repository; `supabase/config.toml` only
-controls a local Supabase instance.
+`foodtrack://auth` and each deployed web app URL (for example,
+`https://your-domain.example`) to **Additional Redirect URLs**. This must be
+configured in the hosted project as well as in this repository;
+`supabase/config.toml` only controls a local Supabase instance.
 
 ## Android release signing
 
