@@ -66,7 +66,7 @@ Use `Provider`, `ChangeNotifierProvider`, and `ChangeNotifierProxyProvider` as i
 | Onboarding complete | `onboarding_completed_at` is non-null | `user_profiles.onboarding_completed_at` |
 | Food | Current catalog/custom food definition | `foods` and lookup/join tables |
 | Meal entry | A user logging a food at a time with servings | `meal_entries` |
-| Meal snapshot | Nutrition captured when the entry is created; immutable historical source | `meal_entry_nutrition` |
+| Meal snapshot | Per-serving nutrition captured when the entry is created; serving totals are recalculated from that snapshot | `meal_entry_nutrition` |
 | Favorite | A user-to-food relationship, not a recent meal | `user_favorites` |
 | Known allergy | An allergen selected by canonical code and stored through `allergen_id` | `allergens`, `user_allergies.allergen_id` |
 | Custom allergy | Free-text allergy that has no matching canonical allergen | `user_allergies.custom_name` |
@@ -93,7 +93,7 @@ Use `Provider`, `ChangeNotifierProvider`, and `ChangeNotifierProxyProvider` as i
 | `user_disliked_foods` | generated `id` | Exactly one of `food_id` or `custom_name` must be present. Current UI writes custom names. |
 | `user_favorites` | composite `(user_id, food_id)` | Favorite foods must load directly from this table. |
 | `meal_entries` | generated `id` | `food_id`, `meal_type_code`, servings, `logged_at`; one user owns each entry. |
-| `meal_entry_nutrition` | `meal_entry_id` | Captured macro/nutrition snapshot. Never recompute old entries from `foods`. |
+| `meal_entry_nutrition` | `meal_entry_id` | Captured per-serving nutrients and totals for the logged serving count. Never recompute old entries from `foods`. |
 | `recommendation_events` | generated `id` | User, trigger type, model version, daily calories, JSON recommendations, created time. |
 
 #### Food tables

@@ -243,15 +243,49 @@ class FoodDetailView extends StatelessWidget {
           const SizedBox(height: 12),
           if (food.allergens.isNotEmpty)
             Text(
-              'May contain: ${food.allergens.join(', ')}',
+              'Recorded allergens: ${food.allergens.join(', ')}',
               style: TextStyle(color: Colors.orange.shade800),
             ),
           const SizedBox(height: 4),
           Text(
-            'Values are estimates and vary by brand and preparation. '
-            'Allergen info may be incomplete.',
+            'Nutrition and allergen details are ${food.isVerified ? 'reviewed' : 'unverified'} '
+            'and may vary by brand and preparation. An empty allergen list does not '
+            'mean the food is allergen-free.',
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
+          if (food.nutritionSourceName != null ||
+              food.allergenSourceName != null ||
+              food.reviewedAt != null) ...[
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Data provenance',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    if (food.nutritionSourceName != null)
+                      SelectableText(
+                        'Nutrition source: ${food.nutritionSourceName}'
+                        '${food.nutritionSourceUrl == null ? '' : '\n${food.nutritionSourceUrl}'}',
+                      ),
+                    if (food.allergenSourceName != null)
+                      SelectableText(
+                        'Allergen source: ${food.allergenSourceName}'
+                        '${food.allergenSourceUrl == null ? '' : '\n${food.allergenSourceUrl}'}',
+                      ),
+                    if (food.reviewedAt != null)
+                      Text(
+                        'Reviewed: ${food.reviewedAt!.toLocal().toString().split(' ').first}',
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: () => showAddToLogSheet(context, food),

@@ -16,7 +16,14 @@ storage is intentionally deferred until suitable images are available.
    custom foods, meal entries, and nutrition snapshots.
 
 The initial schema supports one diet preference per profile, private custom foods,
-favorites, allergies, and immutable nutrition snapshots for meal history.
+favorites, allergies, and captured per-serving nutrition for meal history.
+
+Food catalog records remain unverified until nutrition and allergen references
+have both been reviewed and recorded. Meal entries keep the per-serving nutrition
+captured at logging time, so later food-catalog edits do not change historical
+meals when their serving count is adjusted. Existing meal snapshots are
+backfilled from their saved totals and serving counts; nutrition changes made
+before that migration cannot be reconstructed.
 
 Run with configuration supplied at launch, for example:
 

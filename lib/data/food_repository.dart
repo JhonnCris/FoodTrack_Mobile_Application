@@ -73,6 +73,7 @@ class FoodRepository {
           'created_by_user_id': _client.auth.currentUser!.id,
           'visibility': 'private',
           'emoji': '🍽️',
+          'is_verified': false,
         })
         .select(
           '*, food_categories(display_name), food_allergens(allergens(code)), food_diet_tags(diet_tag_code)',
@@ -110,6 +111,12 @@ class FoodRepository {
           .map((item) => (item as Map)['diet_tag_code'] as String?)
           .whereType<String>()
           .toList(),
+      isVerified: row['is_verified'] as bool? ?? false,
+      nutritionSourceName: row['nutrition_source_name'] as String?,
+      nutritionSourceUrl: row['nutrition_source_url'] as String?,
+      allergenSourceName: row['allergen_source_name'] as String?,
+      allergenSourceUrl: row['allergen_source_url'] as String?,
+      reviewedAt: DateTime.tryParse(row['reviewed_at'] as String? ?? ''),
     );
   }
 }

@@ -14,6 +14,12 @@ class Food {
   final List<String> allergens;
   final List<String> dietTags; // vegan, vegetarian, pescatarian
   final String description;
+  final bool isVerified;
+  final String? nutritionSourceName;
+  final String? nutritionSourceUrl;
+  final String? allergenSourceName;
+  final String? allergenSourceUrl;
+  final DateTime? reviewedAt;
 
   const Food({
     required this.id,
@@ -31,6 +37,12 @@ class Food {
     this.allergens = const [],
     this.dietTags = const [],
     this.description = '',
+    this.isVerified = false,
+    this.nutritionSourceName,
+    this.nutritionSourceUrl,
+    this.allergenSourceName,
+    this.allergenSourceUrl,
+    this.reviewedAt,
   });
 
   /// Simple, rule-based indicators. Not "good/bad" — just what stands out.
