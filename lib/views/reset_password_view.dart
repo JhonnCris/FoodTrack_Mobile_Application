@@ -40,10 +40,11 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
       final session = context.read<SessionViewModel>();
       await session.updatePassword(password);
       await session.finishPasswordRecovery();
-      if (mounted)
+      if (mounted) {
         _showMessage(
           'Password updated. Please sign in with your new password.',
         );
+      }
     } on AuthException catch (error) {
       _showMessage(friendlyAuthError(error));
     } catch (_) {
@@ -56,9 +57,10 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   }
 
   void _showMessage(String message) {
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   @override

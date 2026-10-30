@@ -12,24 +12,31 @@ import 'package:foodtrack/core/app_services.dart';
 import 'package:foodtrack/main.dart';
 
 void main() {
-  testWidgets('shows setup instructions when services are unavailable',
-      (WidgetTester tester) async {
+  testWidgets('shows setup instructions when services are unavailable', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const FoodTrackApp());
 
     expect(find.text('Configuration required'), findsOneWidget);
-    expect(find.textContaining('flutter run --dart-define-from-file'), findsOneWidget);
-  });
-
-  testWidgets('starts with injected Supabase services without global initialization',
-      (WidgetTester tester) async {
-    final client = SupabaseClient(
-      'https://example.supabase.co',
-      'test-anon-key',
+    expect(
+      find.textContaining('flutter run --dart-define-from-file'),
+      findsOneWidget,
     );
-
-    await tester.pumpWidget(FoodTrackApp(services: AppServices(client)));
-    await tester.pump();
-
-    expect(find.text('Welcome back'), findsOneWidget);
   });
+
+  testWidgets(
+    'starts with injected Supabase services without global initialization',
+    (WidgetTester tester) async {
+      final client = SupabaseClient(
+        'https://example.supabase.co',
+        'test-anon-key',
+        authOptions: const AuthClientOptions(autoRefreshToken: false),
+      );
+
+      await tester.pumpWidget(FoodTrackApp(services: AppServices(client)));
+      await tester.pump();
+
+      expect(find.text('Welcome back'), findsOneWidget);
+    },
+  );
 }

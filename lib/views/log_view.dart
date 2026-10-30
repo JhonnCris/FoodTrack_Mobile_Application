@@ -32,15 +32,21 @@ class LogView extends StatelessWidget {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text('Nothing logged yet',
-                      style: TextStyle(color: Colors.grey.shade600)),
+                  child: Text(
+                    'Nothing logged yet',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
                 ),
               )
             else
-              ...diary.entriesFor(type).map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _EntryTile(entry: e),
-                  )),
+              ...diary
+                  .entriesFor(type)
+                  .map(
+                    (e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _EntryTile(entry: e),
+                    ),
+                  ),
           ],
         ],
       ),
@@ -85,9 +91,13 @@ class _EntryTile extends StatelessWidget {
         final removed = await diary.remove(entry.id);
         if (!context.mounted) return false;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(removed
-              ? '${entry.food.name} removed'
-              : 'Could not remove ${entry.food.name}. Please try again.')),
+          SnackBar(
+            content: Text(
+              removed
+                  ? '${entry.food.name} removed'
+                  : 'Could not remove ${entry.food.name}. Please try again.',
+            ),
+          ),
         );
         return removed;
       },
@@ -95,28 +105,38 @@ class _EntryTile extends StatelessWidget {
         food: entry.food,
         subtitleOverride:
             '${entry.servings.toStringAsFixed(entry.servings == entry.servings.roundToDouble() ? 0 : 1)} serving${entry.servings == 1 ? '' : 's'} (${entry.food.servingLabel}) · ${entry.calories.toStringAsFixed(0)} kcal',
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          IconButton(
-            tooltip: 'Less',
-            icon: const Icon(Icons.remove_circle_outline),
-            onPressed: () => _changeServings(context, entry.servings - 0.5),
-          ),
-          IconButton(
-            tooltip: 'More',
-            icon: const Icon(Icons.add_circle_outline),
-            onPressed: () => _changeServings(context, entry.servings + 0.5),
-          ),
-        ]),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Less',
+              icon: const Icon(Icons.remove_circle_outline),
+              onPressed: () => _changeServings(context, entry.servings - 0.5),
+            ),
+            IconButton(
+              tooltip: 'More',
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: () => _changeServings(context, entry.servings + 0.5),
+            ),
+          ],
+        ),
         onTap: () {},
       ),
     );
   }
 
   Future<void> _changeServings(BuildContext context, double servings) async {
-    final updated = await context.read<DiaryViewModel>().updateServings(entry.id, servings);
+    final updated = await context.read<DiaryViewModel>().updateServings(
+      entry.id,
+      servings,
+    );
     if (!context.mounted || updated) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Could not update servings. Check your connection and try again.')),
+      const SnackBar(
+        content: Text(
+          'Could not update servings. Check your connection and try again.',
+        ),
+      ),
     );
   }
 }
@@ -132,26 +152,30 @@ class _FoodPickerSheet extends StatelessWidget {
     final showShortcuts = foodVm.query.isEmpty && foodVm.category == 'All';
 
     Widget list(String title, List<Food> foods) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 6),
-              child: Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6),
+          child: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        ...foods.map(
+          (f) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FoodTile(
+              food: f,
+              trailing: const Icon(Icons.add_circle, color: Colors.green),
+              onTap: () {
+                Navigator.pop(context);
+                showAddToLogSheet(context, f, initial: type);
+              },
             ),
-            ...foods.map((f) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: FoodTile(
-                    food: f,
-                    trailing: const Icon(Icons.add_circle, color: Colors.green),
-                    onTap: () {
-                      Navigator.pop(context);
-                      showAddToLogSheet(context, f, initial: type);
-                    },
-                  ),
-                )),
-          ],
-        );
+          ),
+        ),
+      ],
+    );
 
     return DraggableScrollableSheet(
       expand: false,
@@ -159,32 +183,45 @@ class _FoodPickerSheet extends StatelessWidget {
       maxChildSize: 0.95,
       builder: (_, controller) => Padding(
         padding: EdgeInsets.fromLTRB(
-            16, 0, 16, MediaQuery.of(context).viewInsets.bottom),
-        child: Column(children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Add to ${type.label}',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            onChanged: foodVm.setQuery,
-            decoration: const InputDecoration(
-              hintText: 'Search foods',
-              prefixIcon: Icon(Icons.search),
+          16,
+          0,
+          16,
+          MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Add to ${type.label}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView(controller: controller, children: [
-              if (showShortcuts && diary.favoriteFoods.isNotEmpty)
-                list('Favorites', diary.favoriteFoods),
-              if (showShortcuts && diary.recentFoods.isNotEmpty)
-                list('Recent', diary.recentFoods.take(5).toList()),
-              list(showShortcuts ? 'All foods' : 'Results', foodVm.results),
-            ]),
-          ),
-        ]),
+            const SizedBox(height: 10),
+            TextField(
+              onChanged: foodVm.setQuery,
+              decoration: const InputDecoration(
+                hintText: 'Search foods',
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: controller,
+                children: [
+                  if (showShortcuts && diary.favoriteFoods.isNotEmpty)
+                    list('Favorites', diary.favoriteFoods),
+                  if (showShortcuts && diary.recentFoods.isNotEmpty)
+                    list('Recent', diary.recentFoods.take(5).toList()),
+                  list(showShortcuts ? 'All foods' : 'Results', foodVm.results),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

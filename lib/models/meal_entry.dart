@@ -4,18 +4,18 @@ enum MealType { breakfast, lunch, dinner, snack }
 
 extension MealTypeX on MealType {
   String get label => switch (this) {
-        MealType.breakfast => 'Breakfast',
-        MealType.lunch => 'Lunch',
-        MealType.dinner => 'Dinner',
-        MealType.snack => 'Snacks',
-      };
+    MealType.breakfast => 'Breakfast',
+    MealType.lunch => 'Lunch',
+    MealType.dinner => 'Dinner',
+    MealType.snack => 'Snacks',
+  };
 
   String get emoji => switch (this) {
-        MealType.breakfast => '🌅',
-        MealType.lunch => '☀️',
-        MealType.dinner => '🌙',
-        MealType.snack => '🍎',
-      };
+    MealType.breakfast => '🌅',
+    MealType.lunch => '☀️',
+    MealType.dinner => '🌙',
+    MealType.snack => '🍎',
+  };
 }
 
 class MealEntry {
@@ -47,14 +47,14 @@ class MealEntry {
   double get fat => snapshotFat ?? food.fat * servings;
 
   MealEntry copyWith({double? servings, MealType? type}) => MealEntry(
-        id: id,
-        food: food,
-        type: type ?? this.type,
-        servings: servings ?? this.servings,
-        date: date,
-        snapshotCalories: snapshotCalories,
-        snapshotProtein: snapshotProtein,
-        snapshotCarbs: snapshotCarbs,
-        snapshotFat: snapshotFat,
-      );
+    id: id,
+    food: food,
+    type: type ?? this.type,
+    servings: servings ?? this.servings,
+    date: date,
+    snapshotCalories: snapshotCalories,
+    snapshotProtein: snapshotProtein,
+    snapshotCarbs: snapshotCarbs,
+    snapshotFat: snapshotFat,
+  );
 }

@@ -1,3 +1,5 @@
+rootProject.name = "FoodTrack"
+
 pluginManagement {
     val flutterSdkPath =
         run {

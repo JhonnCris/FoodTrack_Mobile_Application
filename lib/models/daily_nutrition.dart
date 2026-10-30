@@ -14,10 +14,10 @@ class DailyNutrition {
   final double fat;
 
   factory DailyNutrition.fromRow(Map<String, dynamic> row) => DailyNutrition(
-        day: DateTime.parse(row['day'] as String),
-        calories: (row['calories_kcal'] as num?)?.toDouble() ?? 0,
-        protein: (row['protein_g'] as num?)?.toDouble() ?? 0,
-        carbs: (row['carbs_g'] as num?)?.toDouble() ?? 0,
-        fat: (row['fat_g'] as num?)?.toDouble() ?? 0,
-      );
+    day: DateTime.parse(row['day'] as String),
+    calories: (row['calories_kcal'] as num?)?.toDouble() ?? 0,
+    protein: (row['protein_g'] as num?)?.toDouble() ?? 0,
+    carbs: (row['carbs_g'] as num?)?.toDouble() ?? 0,
+    fat: (row['fat_g'] as num?)?.toDouble() ?? 0,
+  );
 }

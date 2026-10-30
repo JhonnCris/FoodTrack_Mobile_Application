@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../data/auth_repository.dart';
 
 class SessionViewModel extends ChangeNotifier {
@@ -14,13 +16,17 @@ class SessionViewModel extends ChangeNotifier {
   bool _passwordRecoveryInProgress = false;
   bool get loading => _loading;
   bool get signedIn => _auth.currentUser != null;
+  String? get userId => _auth.currentUser?.id;
   bool get passwordRecoveryInProgress => _passwordRecoveryInProgress;
   Future<AuthResponse> signIn(String e, String p) => _auth.signIn(e, p);
   Future<AuthResponse> signUp(String e, String p) => _auth.signUp(e, p);
-  Future<void> sendPasswordRecovery(String email) => _auth.sendPasswordRecovery(email);
-  Future<void> resendConfirmation(String email) => _auth.resendConfirmation(email);
+  Future<void> sendPasswordRecovery(String email) =>
+      _auth.sendPasswordRecovery(email);
+  Future<void> resendConfirmation(String email) =>
+      _auth.resendConfirmation(email);
   Future<void> signOut() => _auth.signOut();
-  Future<void> updatePassword(String password) => _auth.updatePassword(password);
+  Future<void> updatePassword(String password) =>
+      _auth.updatePassword(password);
 
   Future<void> finishPasswordRecovery() async {
     _passwordRecoveryInProgress = false;
@@ -38,5 +44,9 @@ class SessionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  @override void dispose() { _sub.cancel(); super.dispose(); }
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
 }

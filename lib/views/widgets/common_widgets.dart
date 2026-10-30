@@ -30,8 +30,10 @@ class MacroBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
@@ -43,8 +45,10 @@ class MacroBar extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text('${value.toStringAsFixed(0)} / ${target.toStringAsFixed(0)} g',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+        Text(
+          '${value.toStringAsFixed(0)} / ${target.toStringAsFixed(0)} g',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+        ),
       ],
     );
   }
@@ -61,8 +65,10 @@ class SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
         if (action != null)
           TextButton(onPressed: onAction, child: Text(action!)),
       ],
@@ -84,14 +90,25 @@ class IndicatorChip extends StatelessWidget {
         color: c.withAlpha(28),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(indicator.positive ? Icons.check_circle : Icons.info_outline,
-            size: 13, color: c),
-        const SizedBox(width: 4),
-        Text(indicator.label,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            indicator.positive ? Icons.check_circle : Icons.info_outline,
+            size: 13,
+            color: c,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            indicator.label,
             style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600, color: c)),
-      ]),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: c,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -119,38 +136,46 @@ class FoodTile extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(children: [
-            Container(
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.greenLight,
-                borderRadius: BorderRadius.circular(12),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.greenLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: FoodImage(food: food, compact: true),
               ),
-              child: FoodImage(food: food, compact: true),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(food.name,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      food.name,
                       style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitleOverride ??
-                        'Serving size: ${food.servingLabel} · ${food.calories.toStringAsFixed(0)} kcal',
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                  ),
-                  FoodCompatibilityWarning(food: food, profile: profile),
-                ],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitleOverride ??
+                          'Serving size: ${food.servingLabel} · ${food.calories.toStringAsFixed(0)} kcal',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    FoodCompatibilityWarning(food: food, profile: profile),
+                  ],
+                ),
               ),
-            ),
-            trailing ?? const Icon(Icons.chevron_right),
-          ]),
+              trailing ?? const Icon(Icons.chevron_right),
+            ],
+          ),
         ),
       ),
     );
@@ -165,19 +190,19 @@ class FoodImageFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: Center(
-          child: Text(
-            'Image\nhere',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: compact ? 10 : 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+    child: Center(
+      child: Text(
+        'Image\nhere',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: compact ? 10 : 16,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Displays a supplied local food image, or the explicit placeholder.
@@ -189,13 +214,13 @@ class FoodImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(compact ? 12 : 16),
-        child: Image.asset(
-          AppImageAssets.foodPath(food.name),
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => FoodImageFallback(compact: compact),
-        ),
-      );
+    borderRadius: BorderRadius.circular(compact ? 12 : 16),
+    child: Image.asset(
+      AppImageAssets.foodPath(food.name),
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => FoodImageFallback(compact: compact),
+    ),
+  );
 }
 
 /// Displays a supplied meal-category image, or the same explicit placeholder.
@@ -211,13 +236,13 @@ class MealCategoryImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(compact ? 12 : 16),
-        child: Image.asset(
-          AppImageAssets.mealCategoryPaths[category]!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => FoodImageFallback(compact: compact),
-        ),
-      );
+    borderRadius: BorderRadius.circular(compact ? 12 : 16),
+    child: Image.asset(
+      AppImageAssets.mealCategoryPaths[category]!,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => FoodImageFallback(compact: compact),
+    ),
+  );
 }
 
 /// Identifies foods that conflict with the user's saved diet or allergies.
@@ -238,10 +263,14 @@ class FoodCompatibilityWarning extends StatelessWidget {
         .toList();
     final foodText = '${food.name} ${food.description}'.toLowerCase();
     final specifiedMatches = profile.allergies
-        .where((allergy) =>
-            !allergyMatches.contains(allergy) && foodText.contains(allergy.toLowerCase()))
+        .where(
+          (allergy) =>
+              !allergyMatches.contains(allergy) &&
+              foodText.contains(allergy.toLowerCase()),
+        )
         .toList();
-    final dietConflict = profile.diet != DietPreference.none &&
+    final dietConflict =
+        profile.diet != DietPreference.none &&
         !food.dietTags.contains(profile.diet.name);
     if (allergyMatches.isEmpty && specifiedMatches.isEmpty && !dietConflict) {
       return const SizedBox.shrink();
@@ -261,34 +290,46 @@ class FoodCompatibilityWarning extends StatelessWidget {
           color: Colors.orange.shade50,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.warning_amber_rounded,
-              size: 14, color: Colors.orange.shade900),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              labels.join(' · '),
-              style: TextStyle(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 14,
+              color: Colors.orange.shade900,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                labels.join(' · '),
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.orange.shade900),
+                  color: Colors.orange.shade900,
+                ),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
 }
 
 /// Bottom sheet used from Food detail, For You and Log: pick meal + servings.
-Future<void> showAddToLogSheet(BuildContext context, Food food,
-    {MealType initial = MealType.snack}) {
+Future<void> showAddToLogSheet(
+  BuildContext context,
+  Food food, {
+  MealType initial = MealType.snack,
+}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: _AddToLogSheet(food: food, initial: initial),
     ),
   );
@@ -313,92 +354,124 @@ class _AddToLogSheetState extends State<_AddToLogSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Container(
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.greenLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: FoodImage(food: f, compact: true),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.greenLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: FoodImage(food: f, compact: true),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        f.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        f.servingLabel,
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(f.name,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
-                  Text(f.servingLabel,
-                      style: TextStyle(color: Colors.grey.shade700)),
-                ],
-              ),
-            ),
-          ]),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            children: MealType.values
-                .map((t) => ChoiceChip(
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              children: MealType.values
+                  .map(
+                    (t) => ChoiceChip(
                       label: Text(t.label),
                       selected: _type == t,
                       onSelected: (_) => setState(() => _type = t),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 16),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            IconButton.filledTonal(
-              onPressed: _servings > 0.5
-                  ? () => setState(() => _servings -= 0.5)
-                  : null,
-              icon: const Icon(Icons.remove),
+                    ),
+                  )
+                  .toList(),
             ),
-            SizedBox(
-              width: 120,
-              child: Column(children: [
-                Text(_servings.toStringAsFixed(1),
-                    style: const TextStyle(
-                        fontSize: 28, fontWeight: FontWeight.w700)),
-                const Text('servings', style: TextStyle(fontSize: 12)),
-              ]),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.filledTonal(
+                  onPressed: _servings > 0.5
+                      ? () => setState(() => _servings -= 0.5)
+                      : null,
+                  icon: const Icon(Icons.remove),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    children: [
+                      Text(
+                        _servings.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Text('servings', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                IconButton.filledTonal(
+                  onPressed: () => setState(() => _servings += 0.5),
+                  icon: const Icon(Icons.add),
+                ),
+              ],
             ),
-            IconButton.filledTonal(
-              onPressed: () => setState(() => _servings += 0.5),
-              icon: const Icon(Icons.add),
+            const SizedBox(height: 12),
+            Text(
+              '${(f.calories * _servings).toStringAsFixed(0)} kcal · '
+              'P ${(f.protein * _servings).toStringAsFixed(0)} g · '
+              'C ${(f.carbs * _servings).toStringAsFixed(0)} g · '
+              'F ${(f.fat * _servings).toStringAsFixed(0)} g',
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-          ]),
-          const SizedBox(height: 12),
-          Text(
-            '${(f.calories * _servings).toStringAsFixed(0)} kcal · '
-            'P ${(f.protein * _servings).toStringAsFixed(0)} g · '
-            'C ${(f.carbs * _servings).toStringAsFixed(0)} g · '
-            'F ${(f.fat * _servings).toStringAsFixed(0)} g',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: () async {
-              final added = await context.read<DiaryViewModel>().add(f, _type, _servings);
-              if (!mounted) return;
-              if (added) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${f.name} added to ${_type.label}')),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () async {
+                final added = await context.read<DiaryViewModel>().add(
+                  f,
+                  _type,
+                  _servings,
                 );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Could not add this food. Check your connection and try again.')),
-                );
-              }
-            },
-            child: const Text('Add to log'),
-          ),
-        ]),
+                if (!context.mounted) return;
+                if (added) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${f.name} added to ${_type.label}'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not add this food. Check your connection and try again.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Add to log'),
+            ),
+          ],
+        ),
       ),
     );
   }

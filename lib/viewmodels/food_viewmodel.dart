@@ -4,12 +4,13 @@ import '../data/food_repository.dart';
 import '../models/food.dart';
 
 class FoodViewModel extends ChangeNotifier {
-  FoodViewModel(this._repo) {
-    load();
-  }
+  FoodViewModel(this._repo);
+
   final FoodRepository _repo;
   String _query = '', _category = 'All';
   List<Food> _foods = [], _results = [];
+  String? _userId;
+  int _loadGeneration = 0;
   bool _loading = true;
   String? _error;
   String get query => _query;
@@ -23,18 +24,41 @@ class FoodViewModel extends ChangeNotifier {
     ..._foods.map((f) => f.category).toSet(),
   ];
 
+  void setUserId(String? userId) {
+    if (_userId == userId) return;
+    _userId = userId;
+    _loadGeneration++;
+    _foods = [];
+    _results = [];
+    _error = null;
+    _loading = userId != null;
+    notifyListeners();
+    if (userId != null) {
+      load();
+    }
+  }
+
   Future<void> load() async {
+    final userId = _userId;
+    if (userId == null) return;
+    final generation = ++_loadGeneration;
     _loading = true;
     _error = null;
     notifyListeners();
     try {
-      _foods = await _repo.loadFoods();
+      final foods = await _repo.loadFoods();
+      if (_userId != userId || _loadGeneration != generation) return;
+      _foods = foods;
       _refresh();
     } catch (_) {
+      if (_userId != userId || _loadGeneration != generation) return;
       _error = 'Unable to load foods.';
+    } finally {
+      if (_userId == userId && _loadGeneration == generation) {
+        _loading = false;
+        notifyListeners();
+      }
     }
-    _loading = false;
-    notifyListeners();
   }
 
   void setQuery(String q) {
@@ -73,6 +97,10 @@ class FoodViewModel extends ChangeNotifier {
     double sugar = 0,
     double sodium = 0,
   }) async {
+    final userId = _userId;
+    if (userId == null) {
+      throw StateError('You must be signed in to create a food.');
+    }
     final food = await _repo.addCustom(
       name: name,
       category: category,
@@ -86,9 +114,11 @@ class FoodViewModel extends ChangeNotifier {
       sugar: sugar,
       sodium: sodium,
     );
-    _foods = [..._foods, food];
-    _refresh();
-    notifyListeners();
+    if (_userId == userId) {
+      _foods = [..._foods, food];
+      _refresh();
+      notifyListeners();
+    }
     return food;
   }
 }

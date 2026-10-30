@@ -39,10 +39,14 @@ Future<void> main() async {
         pendingProfileStore: await PendingProfileStore.create(),
       );
     } catch (_) {
-      initializationError = 'Supabase could not be initialized. Check the URL and anon key.';
+      initializationError =
+          'App services could not be initialized. Check the Supabase '
+          'configuration and secure storage availability.';
     }
   }
-  runApp(FoodTrackApp(services: services, initializationError: initializationError));
+  runApp(
+    FoodTrackApp(services: services, initializationError: initializationError),
+  );
 }
 
 class FoodTrackApp extends StatelessWidget {
@@ -53,7 +57,8 @@ class FoodTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final configurationError = initializationError ??
+    final configurationError =
+        initializationError ??
         (services == null
             ? 'Supabase services are not initialized. ${AppConfig.supabaseConfigurationError}'
             : null);
@@ -68,26 +73,56 @@ class FoodTrackApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider.value(value: services!.authRepository),
-        ChangeNotifierProvider(create: (c) => SessionViewModel(c.read<AuthRepository>())),
+        Provider.value(value: services!.accountRepository),
+        ChangeNotifierProvider(
+          create: (c) => SessionViewModel(c.read<AuthRepository>()),
+        ),
         Provider.value(value: services!.foodRepository),
         Provider.value(value: services!.mealRepository),
         Provider.value(value: services!.profileRepository),
-        ChangeNotifierProvider(create: (c) => ProfileViewModel(c.read<ProfileRepository>(), services!.client, services!.pendingProfileStore)),
+        ChangeNotifierProvider(
+          create: (c) => ProfileViewModel(
+            c.read<ProfileRepository>(),
+            services!.client,
+            services!.pendingProfileStore,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
-        ChangeNotifierProxyProvider2<ProfileViewModel, SessionViewModel, DiaryViewModel>(
-          create: (c) => DiaryViewModel(c.read<MealRepository>(), c.read<FoodRepository>(), services!.client),
+        ChangeNotifierProxyProvider2<
+          ProfileViewModel,
+          SessionViewModel,
+          DiaryViewModel
+        >(
+          create: (c) => DiaryViewModel(
+            c.read<MealRepository>(),
+            c.read<FoodRepository>(),
+            services!.client,
+          ),
           update: (_, profile, session, diary) {
-            diary!.setSession(session.signedIn);
+            diary!.setUserId(session.userId);
             diary.setTimezone(profile.profile.timezone);
             return diary;
           },
         ),
-        ChangeNotifierProvider(
-            create: (c) => FoodViewModel(c.read<FoodRepository>())),
-        ChangeNotifierProxyProvider3<ProfileViewModel, DiaryViewModel, SessionViewModel, RecommendationViewModel>(
-          create: (c) => RecommendationViewModel(c.read<FoodRepository>(), services!.client),
+        ChangeNotifierProxyProvider<SessionViewModel, FoodViewModel>(
+          create: (c) => FoodViewModel(c.read<FoodRepository>()),
+          update: (_, session, foods) {
+            foods!.setUserId(session.userId);
+            return foods;
+          },
+        ),
+        ChangeNotifierProxyProvider3<
+          ProfileViewModel,
+          DiaryViewModel,
+          SessionViewModel,
+          RecommendationViewModel
+        >(
+          create: (c) => RecommendationViewModel(
+            c.read<FoodRepository>(),
+            services!.client,
+          ),
           update: (_, profile, diary, session, recommendations) {
-            recommendations!.setSession(session.signedIn);
+            recommendations!.setUserId(session.userId);
             recommendations.generate(profile.profile, diary);
             return recommendations;
           },
@@ -143,10 +178,37 @@ class _Root extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<SessionViewModel>();
-    if (session.loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (session.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     if (session.passwordRecoveryInProgress) return const ResetPasswordView();
     if (!session.signedIn) return const AuthView();
-    final onboarded = context.select<ProfileViewModel, bool>((p) => p.onboarded);
-    return onboarded ? const MainShell() : const OnboardingView();
+    final profile = context.watch<ProfileViewModel>();
+    if (profile.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (profile.loadState == ProfileLoadState.failed) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_outlined, size: 40),
+                const SizedBox(height: 12),
+                Text(profile.loadError!, textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () => profile.load(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return profile.onboarded ? const MainShell() : const OnboardingView();
   }
 }

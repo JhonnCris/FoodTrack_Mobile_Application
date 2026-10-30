@@ -32,6 +32,6 @@ class AppImageAssets {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
         .replaceAll(RegExp(r'^_+|_+$'), '');
-    return foodOverrides[key] ?? '${_base}$key.webp';
+    return foodOverrides[key] ?? '$_base$key.webp';
   }
 }

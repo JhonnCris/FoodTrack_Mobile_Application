@@ -94,7 +94,7 @@ Use `Provider`, `ChangeNotifierProvider`, and `ChangeNotifierProxyProvider` as i
 | `user_favorites` | composite `(user_id, food_id)` | Favorite foods must load directly from this table. |
 | `meal_entries` | generated `id` | `food_id`, `meal_type_code`, servings, `logged_at`; one user owns each entry. |
 | `meal_entry_nutrition` | `meal_entry_id` | Captured per-serving nutrients and totals for the logged serving count. Never recompute old entries from `foods`. |
-| `recommendation_events` | generated `id` | User, trigger type, model version, daily calories, JSON recommendations, created time. |
+| `recommendation_events` | generated `id` | User, trigger type, model version, recommended food IDs, created time; events expire after 90 days. |
 
 #### Food tables
 
