@@ -70,6 +70,17 @@ extension ProfileSexX on ProfileSex {
 }
 
 class UserProfile {
+  static const canonicalAllergenCodes = [
+    'egg',
+    'milk',
+    'peanut',
+    'soy',
+    'fish',
+    'shellfish',
+    'wheat',
+    'tree_nuts',
+  ];
+
   String name;
   DateTime birthDate;
   double heightCm;
@@ -120,8 +131,6 @@ class UserProfile {
             : 0);
   }
 
-  bool get isMale => sex == ProfileSex.male;
-  set isMale(bool value) => sex = value ? ProfileSex.male : ProfileSex.female;
   UserProfile copy() => UserProfile.fromJson(toJson());
   Map<String, dynamic> toJson() => {
     'name': name,

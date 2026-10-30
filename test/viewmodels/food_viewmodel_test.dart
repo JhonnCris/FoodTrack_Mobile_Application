@@ -7,13 +7,27 @@ import 'package:foodtrack/viewmodels/food_viewmodel.dart';
 
 class _FoodRepositoryFake implements FoodRepository {
   final requests = <Completer<List<Food>>>[];
+  final offsets = <int>[];
+  final searches = <String?>[];
+  final categories = <String?>[];
 
   @override
-  Future<List<Food>> loadFoods() {
+  Future<List<Food>> loadFoods({
+    String? search,
+    String? category,
+    int offset = 0,
+    int limit = 50,
+  }) {
+    searches.add(search);
+    categories.add(category);
+    offsets.add(offset);
     final request = Completer<List<Food>>();
     requests.add(request);
     return request.future;
   }
+
+  @override
+  Future<List<String>> loadCategories() async => ['Test', 'Other'];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -51,6 +65,47 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(viewModel.foods.map((food) => food.id), ['account-b-food']);
 
+      viewModel.dispose();
+    },
+  );
+
+  test(
+    'loads catalog pages and applies search and category remotely',
+    () async {
+      final repository = _FoodRepositoryFake();
+      final viewModel = FoodViewModel(repository);
+      viewModel.setUserId('account-a');
+
+      repository.requests[0].complete(
+        List.generate(50, (index) => _food('food-$index')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.foods, hasLength(50));
+      expect(viewModel.hasMore, isTrue);
+
+      final nextPage = viewModel.loadMore();
+      expect(repository.offsets.last, 50);
+      repository.requests[1].complete([_food('food-50')]);
+      await nextPage;
+      expect(viewModel.foods, hasLength(51));
+      expect(viewModel.hasMore, isFalse);
+
+      viewModel.setQuery('apple');
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      expect(repository.searches.last, 'apple');
+      expect(repository.offsets.last, 0);
+      repository.requests[2].complete([]);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      viewModel.setCategory('Test');
+      expect(repository.categories.last, 'Test');
+      repository.requests[3].complete([]);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.category, 'Test');
+      expect(repository.searches.last, 'apple');
       viewModel.dispose();
     },
   );

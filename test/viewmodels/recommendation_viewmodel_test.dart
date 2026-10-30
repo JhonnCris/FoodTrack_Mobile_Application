@@ -15,11 +15,22 @@ class _FoodRepositoryFake implements FoodRepository {
   final requests = <Completer<List<Food>>>[];
 
   @override
-  Future<List<Food>> loadFoods() {
+  Future<List<Food>> loadFoods({
+    String? search,
+    String? category,
+    int offset = 0,
+    int limit = 50,
+  }) {
     final request = Completer<List<Food>>();
     requests.add(request);
     return request.future;
   }
+
+  @override
+  Future<List<Food>> loadAllFoods() => loadFoods();
+
+  @override
+  Future<List<String>> loadCategories() async => [];
 
   @override
   Future<List<Food>> loadFavorites() async => [];

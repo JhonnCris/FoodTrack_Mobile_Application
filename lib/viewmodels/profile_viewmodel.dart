@@ -51,16 +51,6 @@ class ProfileViewModel extends ChangeNotifier {
       saveState == ProfileSaveState.offlinePending ||
       saveState == ProfileSaveState.failed;
 
-  static const commonAllergens = [
-    'egg',
-    'milk',
-    'peanut',
-    'soy',
-    'fish',
-    'shellfish',
-    'wheat',
-    'tree_nuts',
-  ];
   static const allergyCategories = {
     'Dairy & eggs': ['milk', 'egg'],
     'Nuts & legumes': ['peanut', 'tree_nuts'],

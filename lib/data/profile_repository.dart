@@ -5,16 +5,6 @@ import '../models/user_profile.dart';
 class ProfileRepository {
   ProfileRepository(this._client);
   final SupabaseClient _client;
-  static const knownAllergenCodes = {
-    'egg',
-    'milk',
-    'peanut',
-    'soy',
-    'fish',
-    'shellfish',
-    'wheat',
-    'tree_nuts',
-  };
   Future<UserProfile?> load({String? userId}) async {
     final id = userId ?? _client.auth.currentUser?.id;
     if (id == null) return null;
@@ -76,9 +66,11 @@ class ProfileRepository {
     if (id == null) {
       throw StateError('You must be signed in to save a profile.');
     }
-    final known = p.allergies.where(knownAllergenCodes.contains).toList();
+    final known = p.allergies
+        .where(UserProfile.canonicalAllergenCodes.contains)
+        .toList();
     final custom = p.allergies
-        .where((a) => !knownAllergenCodes.contains(a))
+        .where((a) => !UserProfile.canonicalAllergenCodes.contains(a))
         .toList();
     await _client.rpc(
       'save_user_profile',

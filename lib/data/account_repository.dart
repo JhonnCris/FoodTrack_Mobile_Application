@@ -4,15 +4,19 @@ import 'account_export.dart';
 import 'complete_paged_rows.dart';
 import 'pending_profile_store.dart';
 
-class AccountDeletionLocalCleanupException implements Exception {
-  const AccountDeletionLocalCleanupException(this.cause);
+class AccountDeletionCompletedCleanupException implements Exception {
+  const AccountDeletionCompletedCleanupException({
+    this.signOutError,
+    this.pendingDataError,
+  });
 
-  final Object cause;
+  final Object? signOutError;
+  final Object? pendingDataError;
 
   @override
   String toString() =>
-      'Account was deleted, but local pending data could not be removed: '
-      '$cause';
+      'Account was deleted, but local cleanup was incomplete: '
+      'signOut=$signOutError, pendingData=$pendingDataError';
 }
 
 class AccountRepository {
@@ -163,16 +167,25 @@ class AccountRepository {
     }
 
     await _client.functions.invoke('delete-account');
-    try {
-      if (_client.auth.currentUser?.id == user.id) {
-        await _client.auth.signOut();
-      }
-    } finally {
+    Object? signOutError;
+    Object? pendingDataError;
+    if (_client.auth.currentUser?.id == user.id) {
       try {
-        await _pendingProfileStore.clearForUser(user.id);
+        await _client.auth.signOut();
       } catch (error) {
-        throw AccountDeletionLocalCleanupException(error);
+        signOutError = error;
       }
+    }
+    try {
+      await _pendingProfileStore.clearForUser(user.id);
+    } catch (error) {
+      pendingDataError = error;
+    }
+    if (signOutError != null || pendingDataError != null) {
+      throw AccountDeletionCompletedCleanupException(
+        signOutError: signOutError,
+        pendingDataError: pendingDataError,
+      );
     }
   }
 }

@@ -253,7 +253,7 @@ class ProfileView extends StatelessWidget {
                     ),
                     if (p.allergies.any(
                       (allergy) =>
-                          !ProfileViewModel.commonAllergens.contains(allergy),
+                          !UserProfile.canonicalAllergenCodes.contains(allergy),
                     )) ...[
                       const Text(
                         'Other / specific allergies',
@@ -265,7 +265,7 @@ class ProfileView extends StatelessWidget {
                         runSpacing: 6,
                         children: p.allergies
                             .where(
-                              (allergy) => !ProfileViewModel.commonAllergens
+                              (allergy) => !UserProfile.canonicalAllergenCodes
                                   .contains(allergy),
                             )
                             .map(
@@ -741,12 +741,13 @@ class _AccountDataControlsState extends State<_AccountDataControls> {
         password: confirmedPassword,
       );
       if (mounted) _showMessage('Your account has been deleted.');
-    } on AccountDeletionLocalCleanupException catch (error) {
+    } on AccountDeletionCompletedCleanupException catch (error) {
       debugPrint('Account deleted; local cleanup failed: $error');
       if (mounted) {
         _showMessage(
-          'Your account was deleted, but pending profile data could not be '
-          'removed from this device. Clear the app data or contact support.',
+          'Your account was deleted, but this device could not finish signing '
+          'out or clearing pending profile data. Restart the app and sign out; '
+          'clear app data if pending profile data remains.',
         );
       }
     } catch (error) {

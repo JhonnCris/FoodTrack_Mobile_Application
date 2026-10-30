@@ -96,7 +96,7 @@ class RecommendationViewModel extends ChangeNotifier {
     if (userId == null) return;
 
     try {
-      final foods = _cachedFoods ?? await _repo.loadFoods();
+      final foods = _cachedFoods ?? await _repo.loadAllFoods();
       if (_userId != userId || _sessionGeneration != generation) return;
       _cachedFoods = foods;
 

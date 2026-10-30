@@ -6,15 +6,62 @@ class FoodRepository {
   FoodRepository(this._client);
   final SupabaseClient _client;
 
-  Future<List<Food>> loadFoods() async {
-    final rows = await _client
-        .from('foods')
-        .select(
-          '*, food_categories(display_name), food_allergens(allergens(code)), food_diet_tags(diet_tag_code)',
-        )
-        .order('name');
+  static const _foodSelect =
+      '*, food_categories(display_name), '
+      'food_allergens(allergens(code)), food_diet_tags(diet_tag_code)';
+  static const _foodSelectWithCategoryFilter =
+      '*, food_categories!inner(display_name), '
+      'food_allergens(allergens(code)), food_diet_tags(diet_tag_code)';
+
+  Future<List<Food>> loadFoods({
+    String? search,
+    String? category,
+    int offset = 0,
+    int limit = 50,
+  }) async {
+    if (offset < 0 || limit < 1 || limit > 500) {
+      throw ArgumentError('Food page must use offset >= 0 and limit 1..500.');
+    }
+
+    final selectedFields = category == null
+        ? _foodSelect
+        : _foodSelectWithCategoryFilter;
+    var query = _client.from('foods').select(selectedFields);
+    final normalizedSearch = search?.trim();
+    if (normalizedSearch != null && normalizedSearch.isNotEmpty) {
+      query = query.ilike('name', '%$normalizedSearch%');
+    }
+    if (category != null) {
+      query = query.eq('food_categories.display_name', category);
+    }
+    final rows = await query
+        .order('name')
+        .order('id')
+        .range(offset, offset + limit - 1);
     return (rows as List)
         .map((row) => _food(Map<String, dynamic>.from(row)))
+        .toList();
+  }
+
+  Future<List<Food>> loadAllFoods() async {
+    const pageSize = 500;
+    final foods = <Food>[];
+    var offset = 0;
+    while (true) {
+      final page = await loadFoods(offset: offset, limit: pageSize);
+      foods.addAll(page);
+      if (page.length < pageSize) return foods;
+      offset += page.length;
+    }
+  }
+
+  Future<List<String>> loadCategories() async {
+    final rows = await _client
+        .from('food_categories')
+        .select('display_name')
+        .order('display_name');
+    return (rows as List)
+        .map((row) => (row as Map)['display_name'] as String)
         .toList();
   }
 

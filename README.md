@@ -27,6 +27,7 @@ npx supabase db reset
 psql --set ON_ERROR_STOP=1 --file supabase/tests/rls.sql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 psql --set ON_ERROR_STOP=1 --file supabase/tests/recommendation_privacy.sql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 psql --set ON_ERROR_STOP=1 --file supabase/tests/account_deletion.sql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+psql --set ON_ERROR_STOP=1 --file supabase/tests/reporting_timezones.sql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 ```
 
 Alternatively, run each script in the Supabase SQL Editor for a disposable
@@ -36,6 +37,8 @@ trigger check.
 
 The initial schema supports one diet preference per profile, private custom foods,
 favorites, allergies, and captured per-serving nutrition for meal history.
+Reporting RPCs require a time zone recognized by PostgreSQL; invalid values
+are rejected with an explicit error.
 
 Food catalog records remain unverified until nutrition and allergen references
 have both been reviewed and recorded. Meal entries keep the per-serving nutrition

@@ -51,15 +51,41 @@ class FoodView extends StatelessWidget {
           Expanded(
             child: vm.loading
                 ? const Center(child: CircularProgressIndicator())
-                : vm.error != null
+                : vm.error != null && vm.results.isEmpty
                 ? _FoodLoadError(message: vm.error!, onRetry: vm.load)
                 : vm.results.isEmpty
                 ? _EmptyState(query: vm.query)
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
-                    itemCount: vm.results.length,
+                    itemCount:
+                        vm.results.length +
+                        (vm.error != null || vm.hasMore || vm.loadingMore
+                            ? 1
+                            : 0),
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) {
+                      if (i == vm.results.length) {
+                        if (vm.error != null) {
+                          return _FoodLoadError(
+                            message: vm.error!,
+                            onRetry: vm.loadMore,
+                          );
+                        }
+                        return Center(
+                          child: TextButton(
+                            onPressed: vm.loadingMore ? null : vm.loadMore,
+                            child: vm.loadingMore
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Load more foods'),
+                          ),
+                        );
+                      }
                       final f = vm.results[i];
                       return FoodTile(
                         food: f,

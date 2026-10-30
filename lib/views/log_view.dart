@@ -217,6 +217,31 @@ class _FoodPickerSheet extends StatelessWidget {
                   if (showShortcuts && diary.recentFoods.isNotEmpty)
                     list('Recent', diary.recentFoods.take(5).toList()),
                   list(showShortcuts ? 'All foods' : 'Results', foodVm.results),
+                  if (foodVm.error != null)
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: TextButton(
+                        onPressed: foodVm.results.isEmpty
+                            ? foodVm.load
+                            : foodVm.loadMore,
+                        child: Text(foodVm.error!),
+                      ),
+                    )
+                  else if (foodVm.hasMore || foodVm.loadingMore)
+                    Center(
+                      child: TextButton(
+                        onPressed: foodVm.loadingMore ? null : foodVm.loadMore,
+                        child: foodVm.loadingMore
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Load more foods'),
+                      ),
+                    ),
                 ],
               ),
             ),

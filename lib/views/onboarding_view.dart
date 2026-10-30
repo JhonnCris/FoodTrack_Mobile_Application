@@ -322,7 +322,7 @@ class _DietStep extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 4,
-          children: ProfileViewModel.commonAllergens
+          children: UserProfile.canonicalAllergenCodes
               .map(
                 (a) => FilterChip(
                   label: Text(a),
