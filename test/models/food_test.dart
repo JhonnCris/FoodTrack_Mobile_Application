@@ -21,7 +21,7 @@ void main() {
       emoji: '🥗',
       servingLabel: '1 serving',
       calories: 100,
-      protein: 10,
+      protein: 12,
       carbs: 10,
       fat: 5,
       isVerified: true,
@@ -36,6 +36,8 @@ void main() {
     expect(reviewed.isVerified, isTrue);
     expect(reviewed.nutritionSourceUrl, 'https://example.com/nutrition');
     expect(reviewed.allergenSourceUrl, 'https://example.com/allergens');
+    expect(reviewed.indicators, isNotEmpty);
+    expect(reviewed.indicators.first.explanation, contains('serving'));
   });
 
   test(
@@ -65,4 +67,28 @@ void main() {
       ]);
     },
   );
+
+  test('missing nutrient metadata is distinguishable from a measured zero', () {
+    const food = Food(
+      id: 'incomplete',
+      name: 'Incomplete food',
+      category: 'Test',
+      emoji: '🍽️',
+      servingLabel: '1 serving',
+      calories: 100,
+      protein: 0,
+      carbs: 10,
+      fat: 5,
+      unavailableNutrients: {'protein'},
+    );
+
+    expect(food.protein, 0);
+    expect(food.isNutrientAvailable('protein'), isFalse);
+    expect(
+      food.formattedNutrient('protein', decimalPlaces: 0, unit: 'g'),
+      'Not available',
+    );
+    expect(food.isNutrientAvailable('carbs'), isTrue);
+    expect(food.hasIncompleteNutrition, isTrue);
+  });
 }

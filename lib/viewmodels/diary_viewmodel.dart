@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,6 +34,7 @@ class DiaryViewModel extends ChangeNotifier {
   List<MealEntry> _entries = [];
   List<Food> _favoriteFoods = [];
   var _report = <DailyNutrition>[];
+  var _foodFrequencies = <FoodFrequency>[];
   Set<String> _favorites = {};
   bool _loading = true;
   String? _error;
@@ -40,19 +43,27 @@ class DiaryViewModel extends ChangeNotifier {
   ReportRange _reportRange = ReportRange.week;
   bool _reportLoading = false;
   String? _reportError;
+  bool _foodFrequenciesLoading = false;
+  String? _foodFrequenciesError;
   List<MealEntry> get entries => List.unmodifiable(_entries);
   bool get loading => _loading;
   String? get error => _error;
   List<DailyNutrition> get reportNutrition => List.unmodifiable(_report);
+  List<FoodFrequency> get foodFrequencies =>
+      List.unmodifiable(_foodFrequencies);
   ReportRange get reportRange => _reportRange;
   bool get reportLoading => _reportLoading;
   String? get reportError => _reportError;
+  bool get foodFrequenciesLoading => _foodFrequenciesLoading;
+  String? get foodFrequenciesError => _foodFrequenciesError;
   List<MealEntry> entriesFor(MealType t) =>
       _entries.where((e) => e.type == t).toList();
   double get totalCalories => _entries.fold(0, (s, e) => s + e.calories);
   double get totalProtein => _entries.fold(0, (s, e) => s + e.protein);
   double get totalCarbs => _entries.fold(0, (s, e) => s + e.carbs);
   double get totalFat => _entries.fold(0, (s, e) => s + e.fat);
+  bool get hasIncompleteNutrition =>
+      _entries.any((entry) => entry.food.hasIncompleteNutrition);
   double caloriesFor(MealType t) =>
       entriesFor(t).fold(0, (s, e) => s + e.calories);
   List<Food> get recentFoods {
@@ -85,10 +96,13 @@ class DiaryViewModel extends ChangeNotifier {
     _favoriteFoods = [];
     _favorites = {};
     _report = [];
+    _foodFrequencies = [];
     _error = null;
     _reportError = null;
+    _foodFrequenciesError = null;
     _loading = userId != null;
     _reportLoading = false;
+    _foodFrequenciesLoading = false;
     notifyListeners();
     if (userId != null) load();
   }
@@ -131,6 +145,8 @@ class DiaryViewModel extends ChangeNotifier {
     if (expectedUserId == null) return;
     _reportLoading = true;
     _reportError = null;
+    _foodFrequencies = [];
+    _foodFrequenciesError = null;
     notifyListeners();
     try {
       final report = await _meals.loadNutritionSummary(
@@ -141,6 +157,12 @@ class DiaryViewModel extends ChangeNotifier {
         return;
       }
       _report = report;
+      unawaited(
+        loadFoodFrequencies(
+          userId: expectedUserId,
+          generation: expectedGeneration,
+        ),
+      );
     } catch (_) {
       if (_userId != expectedUserId || _loadGeneration != expectedGeneration) {
         return;
@@ -150,6 +172,36 @@ class DiaryViewModel extends ChangeNotifier {
     } finally {
       if (_userId == expectedUserId && _loadGeneration == expectedGeneration) {
         _reportLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> loadFoodFrequencies({String? userId, int? generation}) async {
+    final expectedUserId = userId ?? _userId;
+    final expectedGeneration = generation ?? _loadGeneration;
+    if (expectedUserId == null) return;
+    _foodFrequenciesLoading = true;
+    _foodFrequenciesError = null;
+    notifyListeners();
+    try {
+      final frequencies = await _meals.loadFoodFrequencies(
+        timezone: _timezone,
+        days: _reportRange.days,
+      );
+      if (_userId != expectedUserId || _loadGeneration != expectedGeneration) {
+        return;
+      }
+      _foodFrequencies = frequencies;
+    } catch (_) {
+      if (_userId != expectedUserId || _loadGeneration != expectedGeneration) {
+        return;
+      }
+      _foodFrequenciesError =
+          'Unable to load frequently logged foods. Retry to try again.';
+    } finally {
+      if (_userId == expectedUserId && _loadGeneration == expectedGeneration) {
+        _foodFrequenciesLoading = false;
         notifyListeners();
       }
     }

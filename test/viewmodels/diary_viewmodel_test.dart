@@ -10,9 +10,10 @@ import 'package:foodtrack/viewmodels/diary_viewmodel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MealRepositoryFake implements MealRepository {
-  _MealRepositoryFake(this.currentUserId);
+  _MealRepositoryFake(this.currentUserId, {this.failFoodFrequencies = false});
 
   final String? Function() currentUserId;
+  final bool failFoodFrequencies;
   final Map<String, List<MealEntry>> entriesByUser = {};
   final removeRequests = <Completer<void>>[];
   final removedUserIds = <String>[];
@@ -26,6 +27,17 @@ class _MealRepositoryFake implements MealRepository {
     required String timezone,
     required int days,
   }) async => [];
+
+  @override
+  Future<List<FoodFrequency>> loadFoodFrequencies({
+    required String timezone,
+    required int days,
+  }) async {
+    if (failFoodFrequencies) {
+      throw StateError('Frequency query failed');
+    }
+    return [];
+  }
 
   @override
   Future<void> remove(String id, {required String userId}) {
@@ -73,6 +85,26 @@ Future<void> _settleLoads() async {
 }
 
 void main() {
+  test('report remains available when food frequency loading fails', () async {
+    const userId = 'account-a';
+    final meals = _MealRepositoryFake(() => userId, failFoodFrequencies: true);
+    final client = SupabaseClient(
+      'https://example.supabase.co',
+      'test-anon-key',
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
+    );
+    final viewModel = DiaryViewModel(meals, _FoodRepositoryFake(), client)
+      ..setUserId(userId);
+
+    await _settleLoads();
+    expect(viewModel.reportError, isNull);
+    expect(viewModel.foodFrequenciesError, contains('Unable to load'));
+    expect(viewModel.reportLoading, isFalse);
+
+    viewModel.dispose();
+    client.dispose();
+  });
+
   test(
     'does not restore a removed meal into another account after failure',
     () async {

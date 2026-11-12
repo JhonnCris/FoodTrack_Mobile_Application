@@ -180,6 +180,12 @@ class FoodDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final diary = context.watch<DiaryViewModel>();
     final profile = context.watch<ProfileViewModel>().profile;
+    final alternatives = context
+        .watch<RecommendationViewModel>()
+        .items
+        .where((recommendation) => recommendation.food.id != food.id)
+        .take(2)
+        .toList();
     final fav = diary.isFavorite(food);
 
     Widget row(String label, String value) => Padding(
@@ -238,10 +244,45 @@ class FoodDetailView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (food.indicators.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: food.indicators.map(IndicatorChip.new).toList(),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'What stands out',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: food.indicators.map(IndicatorChip.new).toList(),
+                    ),
+                    const SizedBox(height: 6),
+                    for (final indicator in food.indicators)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          '${indicator.label}: ${indicator.explanation}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Indicators use the listed serving size and describe nutrients, not whether a food is universally healthy or unhealthy.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           if (food.description.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -253,15 +294,60 @@ class FoodDetailView extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  row('Calories', '${food.calories.toStringAsFixed(0)} kcal'),
+                  row(
+                    'Calories',
+                    food.formattedNutrient(
+                      'calories',
+                      decimalPlaces: 0,
+                      unit: 'kcal',
+                    ),
+                  ),
                   const Divider(),
-                  row('Protein', '${food.protein} g'),
-                  row('Carbs', '${food.carbs} g'),
-                  row('Fat', '${food.fat} g'),
+                  row(
+                    'Protein',
+                    food.formattedNutrient(
+                      'protein',
+                      decimalPlaces: 1,
+                      unit: 'g',
+                    ),
+                  ),
+                  row(
+                    'Carbs',
+                    food.formattedNutrient(
+                      'carbs',
+                      decimalPlaces: 1,
+                      unit: 'g',
+                    ),
+                  ),
+                  row(
+                    'Fat',
+                    food.formattedNutrient('fat', decimalPlaces: 1, unit: 'g'),
+                  ),
                   const Divider(),
-                  row('Fiber', '${food.fiber} g'),
-                  row('Sugar', '${food.sugar} g'),
-                  row('Sodium', '${food.sodium.toStringAsFixed(0)} mg'),
+                  row(
+                    'Fiber',
+                    food.formattedNutrient(
+                      'fiber',
+                      decimalPlaces: 1,
+                      unit: 'g',
+                    ),
+                  ),
+                  row(
+                    'Sugar',
+                    food.formattedNutrient(
+                      'sugar',
+                      decimalPlaces: 1,
+                      unit: 'g',
+                    ),
+                  ),
+                  row(
+                    'Sodium',
+                    food.formattedNutrient(
+                      'sodium',
+                      decimalPlaces: 0,
+                      unit: 'mg',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -312,6 +398,36 @@ class FoodDetailView extends StatelessWidget {
               ),
             ),
           ],
+          if (alternatives.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Other ideas for you',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: Text(
+                'Based on your saved goal and food preferences. Check each food’s details and label before choosing.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+            ),
+            ...alternatives.map(
+              (recommendation) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: FoodTile(
+                  food: recommendation.food,
+                  subtitleOverride:
+                      '${recommendation.food.servingLabel} · ${recommendation.food.formattedNutrient('calories', decimalPlaces: 0, unit: 'kcal')}',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FoodDetailView(food: recommendation.food),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: () => showAddToLogSheet(context, food),
@@ -353,6 +469,9 @@ class _CustomFoodSheetState extends State<_CustomFoodSheet> {
   bool get _canEstimate {
     final yieldCount = _yield;
     return _ingredients.isNotEmpty &&
+        _ingredients.every(
+          (ingredient) => !ingredient.food.hasIncompleteNutrition,
+        ) &&
         yieldCount != null &&
         yieldCount.isFinite &&
         yieldCount > 0 &&
@@ -435,7 +554,7 @@ class _CustomFoodSheetState extends State<_CustomFoodSheet> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(food.name),
                                   subtitle: Text(
-                                    '${food.servingLabel} · ${food.calories.toStringAsFixed(0)} kcal',
+                                    '${food.servingLabel} · ${food.formattedNutrient('calories', decimalPlaces: 0, unit: 'kcal')}',
                                   ),
                                   onTap: () =>
                                       Navigator.of(dialogContext).pop(food),
@@ -479,6 +598,14 @@ class _CustomFoodSheetState extends State<_CustomFoodSheet> {
       _showMessage('Add at least one ingredient.');
       return;
     }
+    if (_ingredients.any(
+      (ingredient) => ingredient.food.hasIncompleteNutrition,
+    )) {
+      _showMessage(
+        'Replace ingredients with incomplete nutrition data before saving.',
+      );
+      return;
+    }
     if (yieldCount == null || !yieldCount.isFinite || yieldCount <= 0) {
       _showMessage('Enter how many servings the recipe makes.');
       return;
@@ -517,7 +644,7 @@ class _CustomFoodSheetState extends State<_CustomFoodSheet> {
       context.read<RecommendationViewModel>().generate(
         profile,
         context.read<DiaryViewModel>(),
-        trigger: 'catalog_change',
+        trigger: 'manual',
       );
       Navigator.pop(context);
       messenger.showSnackBar(
@@ -596,6 +723,16 @@ class _CustomFoodSheetState extends State<_CustomFoodSheet> {
               Text(
                 'Add foods such as rice, chicken, or vegetables. No calorie or protein entry is needed.',
                 style: TextStyle(color: Colors.grey.shade700),
+              ),
+            if (_ingredients.any(
+              (ingredient) => ingredient.food.hasIncompleteNutrition,
+            ))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'A selected ingredient has incomplete nutrition data, so this recipe cannot be saved with a reliable estimate. Choose an ingredient with complete nutrition.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             ..._ingredients.asMap().entries.map((entry) {
               final index = entry.key;

@@ -76,6 +76,42 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+class DiaryLoadStatus extends StatelessWidget {
+  const DiaryLoadStatus({
+    super.key,
+    required this.loading,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final bool loading;
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          if (loading)
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            const Icon(Icons.cloud_off_outlined),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message)),
+          if (!loading)
+            TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Chip with an icon AND text, so meaning never depends on color alone.
 class IndicatorChip extends StatelessWidget {
   final FoodIndicator indicator;
@@ -163,7 +199,7 @@ class FoodTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitleOverride ??
-                          'Serving size: ${food.servingLabel} · ${food.calories.toStringAsFixed(0)} kcal',
+                          'Serving size: ${food.servingLabel} · ${food.formattedNutrient('calories', decimalPlaces: 0, unit: 'kcal')}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade700,
@@ -271,7 +307,9 @@ class FoodCompatibilityWarning extends StatelessWidget {
         .toList();
     final dietConflict =
         profile.diet != DietPreference.none &&
-        !food.dietTags.contains(profile.diet.name);
+        !food.dietTags.contains(profile.diet.name) &&
+        !(profile.diet == DietPreference.vegetarian &&
+            food.dietTags.contains('vegan'));
     if (allergyMatches.isEmpty && specifiedMatches.isEmpty && !dietConflict) {
       return const SizedBox.shrink();
     }
@@ -436,10 +474,10 @@ class _AddToLogSheetState extends State<_AddToLogSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              '${(f.calories * _servings).toStringAsFixed(0)} kcal · '
-              'P ${(f.protein * _servings).toStringAsFixed(0)} g · '
-              'C ${(f.carbs * _servings).toStringAsFixed(0)} g · '
-              'F ${(f.fat * _servings).toStringAsFixed(0)} g',
+              '${f.isNutrientAvailable('calories') ? '${(f.calories * _servings).toStringAsFixed(0)} kcal' : 'Calories not available'} · '
+              '${f.isNutrientAvailable('protein') ? 'P ${(f.protein * _servings).toStringAsFixed(0)} g' : 'Protein not available'} · '
+              '${f.isNutrientAvailable('carbs') ? 'C ${(f.carbs * _servings).toStringAsFixed(0)} g' : 'Carbs not available'} · '
+              '${f.isNutrientAvailable('fat') ? 'F ${(f.fat * _servings).toStringAsFixed(0)} g' : 'Fat not available'}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),

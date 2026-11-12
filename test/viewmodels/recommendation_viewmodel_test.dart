@@ -50,6 +50,12 @@ class _MealRepositoryFake implements MealRepository {
   }) async => [];
 
   @override
+  Future<List<FoodFrequency>> loadFoodFrequencies({
+    required String timezone,
+    required int days,
+  }) async => [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -65,7 +71,52 @@ Food _food(String id) => Food(
   fat: 5,
 );
 
+Food _balancedFood(String id, String name) => Food(
+  id: id,
+  name: name,
+  category: 'Test',
+  emoji: '🍽️',
+  servingLabel: '1 serving',
+  calories: 300,
+  protein: 12,
+  carbs: 20,
+  fat: 5,
+  fiber: 5,
+);
+
 void main() {
+  test('uses activity-adjusted targets and filters disliked foods', () async {
+    final client = SupabaseClient(
+      'https://example.supabase.co',
+      'test-anon-key',
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
+    );
+    final foodRepository = _FoodRepositoryFake();
+    final diary = DiaryViewModel(_MealRepositoryFake(), foodRepository, client);
+    final viewModel = RecommendationViewModel(foodRepository, client)
+      ..setUserId('account-a');
+    final profile = UserProfile()
+      ..activity = ActivityLevel.active
+      ..dislikedFoods.add('avoid me');
+
+    final result = viewModel.generate(profile, diary, trigger: 'manual');
+    foodRepository.requests.single.complete([
+      _balancedFood('keep', 'Keep this'),
+      _balancedFood('skip', 'Avoid Me special'),
+    ]);
+    await result;
+
+    expect(viewModel.items.map((item) => item.food.id), ['keep']);
+    expect(
+      viewModel.items.single.reason,
+      contains('very active activity level'),
+    );
+
+    viewModel.dispose();
+    diary.dispose();
+    client.dispose();
+  });
+
   test('discards stale recommendations after an account switch', () async {
     final client = SupabaseClient(
       'https://example.supabase.co',

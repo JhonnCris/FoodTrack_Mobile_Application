@@ -284,8 +284,28 @@ class _GoalStep extends StatelessWidget {
   }
 }
 
-class _DietStep extends StatelessWidget {
+class _DietStep extends StatefulWidget {
   const _DietStep();
+
+  @override
+  State<_DietStep> createState() => _DietStepState();
+}
+
+class _DietStepState extends State<_DietStep> {
+  final _dislikeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _dislikeController.dispose();
+    super.dispose();
+  }
+
+  void _addDislike(ProfileViewModel vm, String value) {
+    final dislike = value.trim();
+    if (dislike.isEmpty) return;
+    vm.update((profile) => profile.dislikedFoods.add(dislike));
+    _dislikeController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -331,6 +351,48 @@ class _DietStep extends StatelessWidget {
                 ),
               )
               .toList(),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Foods you dislike (optional)',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'We will leave matching foods out of your recommendations.',
+          style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+        ),
+        if (p.dislikedFoods.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: p.dislikedFoods
+                .map(
+                  (food) => InputChip(
+                    label: Text(food),
+                    onDeleted: () => vm.update(
+                      (profile) => profile.dislikedFoods.remove(food),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+        const SizedBox(height: 8),
+        TextField(
+          controller: _dislikeController,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) => _addDislike(vm, value),
+          decoration: InputDecoration(
+            labelText: 'Add a food to avoid',
+            suffixIcon: IconButton(
+              tooltip: 'Add disliked food',
+              onPressed: () => _addDislike(vm, _dislikeController.text),
+              icon: const Icon(Icons.add),
+            ),
+          ),
         ),
       ],
     );
@@ -379,6 +441,10 @@ class _ReviewStep extends StatelessWidget {
                 row(
                   'Allergies',
                   p.allergies.isEmpty ? 'None' : p.allergies.join(', '),
+                ),
+                row(
+                  'Foods to avoid',
+                  p.dislikedFoods.isEmpty ? 'None' : p.dislikedFoods.join(', '),
                 ),
               ],
             ),

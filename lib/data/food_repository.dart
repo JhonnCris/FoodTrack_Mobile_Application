@@ -29,7 +29,12 @@ class FoodRepository {
     var query = _client.from('foods').select(selectedFields);
     final normalizedSearch = search?.trim();
     if (normalizedSearch != null && normalizedSearch.isNotEmpty) {
-      query = query.ilike('name', '%$normalizedSearch%');
+      query = query.textSearch(
+        'name',
+        normalizedSearch,
+        config: 'simple',
+        type: TextSearchType.websearch,
+      );
     }
     if (category != null) {
       query = query.eq('food_categories.display_name', category);
@@ -164,6 +169,15 @@ class FoodRepository {
       allergenSourceName: row['allergen_source_name'] as String?,
       allergenSourceUrl: row['allergen_source_url'] as String?,
       reviewedAt: DateTime.tryParse(row['reviewed_at'] as String? ?? ''),
+      unavailableNutrients: {
+        if (row['calories_kcal'] == null) 'calories',
+        if (row['protein_g'] == null) 'protein',
+        if (row['carbs_g'] == null) 'carbs',
+        if (row['fat_g'] == null) 'fat',
+        if (row['fiber_g'] == null) 'fiber',
+        if (row['sugar_g'] == null) 'sugar',
+        if (row['sodium_mg'] == null) 'sodium',
+      },
     );
   }
 }

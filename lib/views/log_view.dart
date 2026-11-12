@@ -16,40 +16,66 @@ class LogView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Today\'s log')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        children: [
-          for (final type in MealType.values) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: SectionHeader(
-                type.label,
-                action: '+ Add',
-                onAction: () => _openPicker(context, type),
+      body: diary.error != null && diary.entries.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: DiaryLoadStatus(
+                loading: false,
+                message: diary.error!,
+                onRetry: diary.load,
               ),
-            ),
-            if (diary.entriesFor(type).isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Nothing logged yet',
-                    style: TextStyle(color: Colors.grey.shade600),
+            )
+          : diary.loading && diary.entries.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+              children: [
+                if (diary.error != null)
+                  DiaryLoadStatus(
+                    loading: false,
+                    message: diary.error!,
+                    onRetry: diary.load,
                   ),
-                ),
-              )
-            else
-              ...diary
-                  .entriesFor(type)
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _EntryTile(entry: e),
+                if (diary.hasIncompleteNutrition)
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(14),
+                      child: Text(
+                        'Some foods have incomplete nutrition data; their missing values are not included in daily totals.',
+                      ),
                     ),
                   ),
-          ],
-        ],
-      ),
+                for (final type in MealType.values) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SectionHeader(
+                      type.label,
+                      action: '+ Add',
+                      onAction: () => _openPicker(context, type),
+                    ),
+                  ),
+                  if (diary.entriesFor(type).isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Nothing logged yet',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ),
+                    )
+                  else
+                    ...diary
+                        .entriesFor(type)
+                        .map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _EntryTile(entry: e),
+                          ),
+                        ),
+                ],
+              ],
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openPicker(context, MealType.snack),
         icon: const Icon(Icons.add),
@@ -104,7 +130,7 @@ class _EntryTile extends StatelessWidget {
       child: FoodTile(
         food: entry.food,
         subtitleOverride:
-            '${entry.servings.toStringAsFixed(entry.servings == entry.servings.roundToDouble() ? 0 : 1)} serving${entry.servings == 1 ? '' : 's'} (${entry.food.servingLabel}) · ${entry.calories.toStringAsFixed(0)} kcal',
+            '${entry.servings.toStringAsFixed(entry.servings == entry.servings.roundToDouble() ? 0 : 1)} serving${entry.servings == 1 ? '' : 's'} (${entry.food.servingLabel}) · ${entry.food.formattedNutrient('calories', decimalPlaces: 0, unit: 'kcal')}${entry.food.hasIncompleteNutrition ? ' · Some nutrition unavailable' : ''}',
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

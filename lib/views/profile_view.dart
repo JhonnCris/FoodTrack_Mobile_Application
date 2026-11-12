@@ -324,92 +324,133 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  void _editBasics(BuildContext context) {
+  Future<void> _editBasics(BuildContext context) async {
     final vm = context.read<ProfileViewModel>();
     final p = vm.profile;
     final name = TextEditingController(text: p.name);
     final age = TextEditingController(text: '${p.age}');
     final h = TextEditingController(text: p.heightCm.toStringAsFixed(0));
     final w = TextEditingController(text: p.weightKg.toStringAsFixed(0));
+    String? validationError;
 
-    showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Edit basics',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: age,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Age'),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Edit basics',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: name,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: age,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Age'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: h,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Height (cm)',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: w,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Weight (kg)',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (validationError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    validationError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: h,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Height (cm)'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: w,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Weight (kg)'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () {
-                vm.update((x) {
-                  x.name = name.text.trim().isEmpty ? x.name : name.text.trim();
+              FilledButton(
+                onPressed: () {
                   final enteredAge = int.tryParse(age.text);
-                  if (enteredAge != null &&
-                      enteredAge >= 12 &&
-                      enteredAge <= 120) {
+                  final height = double.tryParse(h.text);
+                  final weight = double.tryParse(w.text);
+                  if (enteredAge == null ||
+                      enteredAge < 12 ||
+                      enteredAge > 120 ||
+                      height == null ||
+                      !height.isFinite ||
+                      height < 80 ||
+                      height > 250 ||
+                      weight == null ||
+                      !weight.isFinite ||
+                      weight < 20 ||
+                      weight > 400) {
+                    setSheetState(
+                      () => validationError = 'Enter an age from 12 to 120, height from 80 to 250 cm, and weight from 20 to 400 kg.',
+                    );
+                    return;
+                  }
+                  vm.update((x) {
+                    x.name = name.text.trim().isEmpty
+                        ? x.name
+                        : name.text.trim();
                     final now = DateTime.now();
                     x.birthDate = DateTime(
                       now.year - enteredAge,
                       x.birthDate.month,
                       x.birthDate.day,
                     );
-                  }
-                  x.heightCm = double.tryParse(h.text) ?? x.heightCm;
-                  x.weightKg = double.tryParse(w.text) ?? x.weightKg;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+                    x.heightCm = height;
+                    x.weightKg = weight;
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
         ),
       ),
     );
+    name.dispose();
+    age.dispose();
+    h.dispose();
+    w.dispose();
   }
 
   void _addSpecificAllergy(BuildContext context) {

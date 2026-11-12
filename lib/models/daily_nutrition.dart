@@ -21,3 +21,10 @@ class DailyNutrition {
     fat: (row['fat_g'] as num?)?.toDouble() ?? 0,
   );
 }
+
+class FoodFrequency {
+  const FoodFrequency({required this.foodName, required this.logCount});
+
+  final String foodName;
+  final int logCount;
+}

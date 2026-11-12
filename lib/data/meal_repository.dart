@@ -40,6 +40,57 @@ class MealRepository {
         .toList();
   }
 
+  Future<List<FoodFrequency>> loadFoodFrequencies({
+    required String timezone,
+    required int days,
+  }) async {
+    if (days < 1 || days > 366) {
+      throw ArgumentError.value(days, 'days', 'Must be between 1 and 366.');
+    }
+
+    final bounds = await _client
+        .rpc('current_day_bounds', params: {'p_timezone': timezone})
+        .single();
+    final startOfToday = DateTime.parse(bounds['start_at'] as String);
+    final start = startOfToday.subtract(Duration(days: days - 1));
+    final counts = <String, int>{};
+    var offset = 0;
+    const pageSize = 500;
+
+    while (true) {
+      final rows = await _client
+          .from('meal_entries')
+          .select('food_id, foods(name)')
+          .gte('logged_at', start.toIso8601String())
+          .lt('logged_at', bounds['end_at'] as String)
+          .order('logged_at')
+          .range(offset, offset + pageSize - 1);
+      for (final row in rows as List) {
+        final foodName = ((row['foods'] as Map?)?['name'] as String?)?.trim();
+        if (foodName != null && foodName.isNotEmpty) {
+          counts.update(foodName, (count) => count + 1, ifAbsent: () => 1);
+        }
+      }
+      if (rows.length < pageSize) break;
+      offset += pageSize;
+    }
+
+    final frequencies =
+        counts.entries
+            .map(
+              (entry) =>
+                  FoodFrequency(foodName: entry.key, logCount: entry.value),
+            )
+            .toList()
+          ..sort((left, right) {
+            final byCount = right.logCount.compareTo(left.logCount);
+            return byCount != 0
+                ? byCount
+                : left.foodName.compareTo(right.foodName);
+          });
+    return frequencies.take(5).toList();
+  }
+
   Future<void> add(Food food, MealType type, double servings) => _client.rpc(
     'create_meal_entry',
     params: {
@@ -88,6 +139,15 @@ class MealRepository {
       allergens: allergens,
       dietTags: tags,
       description: f['description'] ?? '',
+      unavailableNutrients: {
+        if (f['calories_kcal'] == null) 'calories',
+        if (f['protein_g'] == null) 'protein',
+        if (f['carbs_g'] == null) 'carbs',
+        if (f['fat_g'] == null) 'fat',
+        if (f['fiber_g'] == null) 'fiber',
+        if (f['sugar_g'] == null) 'sugar',
+        if (f['sodium_mg'] == null) 'sodium',
+      },
     );
     return MealEntry(
       id: row['id'],

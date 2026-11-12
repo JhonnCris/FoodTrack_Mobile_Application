@@ -63,7 +63,9 @@ class RecommendationViewModel extends ChangeNotifier {
     final allergies = profile.allergies.toList()..sort();
     final dislikes = profile.dislikedFoods.toList()..sort();
     final signature =
-        '${profile.goal.code}:${profile.diet.name}:${allergies.join(',')}:'
+        '${profile.goal.code}:${profile.activity.name}:'
+        '${profile.calorieTarget.round()}:${profile.proteinTarget.round()}:'
+        '${profile.diet.name}:${allergies.join(',')}:'
         '${dislikes.join(',')}:${diary.totalCalories.round()}:'
         '${diary.totalProtein.round()}';
     if ((signature == _lastSignature || signature == _pendingSignature) &&
@@ -106,6 +108,7 @@ class RecommendationViewModel extends ChangeNotifier {
         double.infinity,
       );
       for (final food in foods) {
+        if (food.hasIncompleteNutrition) continue;
         final text = '${food.name} ${food.description}'.toLowerCase();
         if (food.allergens.any(profile.allergies.contains) ||
             profile.allergies.any(
@@ -124,10 +127,19 @@ class RecommendationViewModel extends ChangeNotifier {
           continue;
         }
         var score = _score(food, profile.goal);
-        if (food.calories > remaining && remaining > 0) score *= .65;
+        if (score > 0 && food.calories > remaining && remaining > 0) {
+          score *= .65;
+        } else if (score > 0 && remaining > 0 && profile.calorieTarget > 0) {
+          final activityDemand =
+              ((profile.activity.factor - ActivityLevel.sedentary.factor) /
+                      (ActivityLevel.active.factor -
+                          ActivityLevel.sedentary.factor))
+                  .clamp(0.0, 1.0);
+          score += food.calories / profile.calorieTarget * 20 * activityDemand;
+        }
         if (score > 0) {
           recommendations.add(
-            Recommendation(food, score, _reason(food, profile.goal, remaining)),
+            Recommendation(food, score, _reason(food, profile, remaining)),
           );
         }
       }
@@ -170,8 +182,9 @@ class RecommendationViewModel extends ChangeNotifier {
           25.0,
   };
 
-  String _reason(Food food, FitnessGoal goal, double remaining) =>
-      '${goal.label}: ${food.protein.toStringAsFixed(0)} g protein, '
+  String _reason(Food food, UserProfile profile, double remaining) =>
+      '${profile.goal.label} with your ${profile.activity.label.toLowerCase()} '
+      'activity level: ${food.protein.toStringAsFixed(0)} g protein, '
       '${food.fiber.toStringAsFixed(1)} g fiber; '
       '${remaining.toStringAsFixed(0)} kcal remaining today.';
 

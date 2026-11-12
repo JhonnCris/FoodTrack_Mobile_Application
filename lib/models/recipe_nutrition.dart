@@ -35,6 +35,11 @@ class RecipeNutrition {
     }
 
     final list = ingredients.toList();
+    if (list.any((ingredient) => ingredient.food.hasIncompleteNutrition)) {
+      throw ArgumentError(
+        'Ingredient nutrition must be complete to estimate this recipe.',
+      );
+    }
     if (list.any(
       (ingredient) => !ingredient.servings.isFinite || ingredient.servings <= 0,
     )) {

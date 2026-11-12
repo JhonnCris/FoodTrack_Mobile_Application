@@ -61,4 +61,26 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('rejects recipes with incomplete ingredient nutrition', () {
+    const incompleteFood = Food(
+      id: 'incomplete',
+      name: 'Incomplete',
+      category: 'Test',
+      emoji: '🍽️',
+      servingLabel: '1 serving',
+      calories: 100,
+      protein: 0,
+      carbs: 10,
+      fat: 5,
+      unavailableNutrients: {'protein'},
+    );
+
+    expect(
+      () => RecipeNutrition.fromIngredients(const [
+        RecipeIngredient(food: incompleteFood, servings: 1),
+      ], recipeServings: 1),
+      throwsArgumentError,
+    );
+  });
 }
